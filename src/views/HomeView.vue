@@ -28,7 +28,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="forecast in weatherForecasts"
+              v-for="forecast in paginatedForecasts"
               :key="forecast.startTime + forecast.city"
             >
               <td>{{ forecast.city }}</td>
@@ -45,12 +45,19 @@
           </tbody>
         </table>
       </div>
+      <div class="pagination">
+        <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
+        <span>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</span>
+        <button @click="nextPage" :disabled="currentPage === totalPages">
+          下一頁
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const weatherForecasts = ref([])
 const isLoading = ref(false)
@@ -81,6 +88,31 @@ const cities = [
   '金門縣',
   '連江縣',
 ]
+
+const currentPage = ref(1)
+const itemsPerPage = 10
+
+const paginatedForecasts = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return weatherForecasts.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(weatherForecasts.value.length / itemsPerPage)
+})
+
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--
+  }
+}
+
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++
+  }
+}
 
 async function fetchWeather() {
   isLoading.value = true
@@ -120,6 +152,7 @@ async function fetchWeather() {
       weatherForecasts.value = forecasts.sort((a, b) => {
         return cities.indexOf(a.city) - cities.indexOf(b.city)
       })
+      currentPage.value = 1 // 重置頁碼到第一頁
     } else {
       throw new Error(data.message || '獲取天氣數據失敗')
     }
@@ -155,6 +188,31 @@ table {
 
   th {
     background-color: #f2f2f2;
+  }
+}
+
+.pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  button {
+    margin: 0 10px;
+    padding: 5px 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+
+    &:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+  }
+
+  span {
+    margin: 0 10px;
   }
 }
 </style>
