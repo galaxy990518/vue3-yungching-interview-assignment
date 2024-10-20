@@ -1,8 +1,13 @@
 <template>
   <div id="app">
+    <Toolbar />
     <router-view></router-view>
   </div>
 </template>
+
+<script setup>
+import Toolbar from './components/Toolbar.vue'
+</script>
 
 <style lang="scss">
 html,
