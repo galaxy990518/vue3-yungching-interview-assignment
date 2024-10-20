@@ -24,6 +24,7 @@
               <th>最低溫</th>
               <th>最高溫</th>
               <th>舒適度</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>
@@ -41,6 +42,16 @@
               <td>{{ forecast.minTemp }}°C</td>
               <td>{{ forecast.maxTemp }}°C</td>
               <td>{{ forecast.comfort }}</td>
+              <td>
+                <button
+                  @click="toggleFavorite(forecast)"
+                  :class="
+                    isFavorite(forecast) ? 'remove-favorite' : 'add-favorite'
+                  "
+                >
+                  {{ isFavorite(forecast) ? '移除最愛' : '新增最愛' }}
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -114,6 +125,8 @@ function nextPage() {
   }
 }
 
+const favorites = ref([])
+
 async function fetchWeather() {
   isLoading.value = true
   error.value = null
@@ -152,7 +165,7 @@ async function fetchWeather() {
       weatherForecasts.value = forecasts.sort((a, b) => {
         return cities.indexOf(a.city) - cities.indexOf(b.city)
       })
-      currentPage.value = 1 // 重置頁碼到第一頁
+      currentPage.value = 1 // 重置 currentPage 到第一頁
     } else {
       throw new Error(data.message || '獲取天氣數據失敗')
     }
@@ -169,8 +182,38 @@ function formatDate(dateString) {
   return date.toLocaleString('zh-TW')
 }
 
+function loadFavorites() {
+  const storedFavorites = localStorage.getItem('weatherFavorites')
+  if (storedFavorites) {
+    favorites.value = JSON.parse(storedFavorites)
+  }
+}
+
+function saveFavorites() {
+  localStorage.setItem('weatherFavorites', JSON.stringify(favorites.value))
+}
+
+function toggleFavorite(forecast) {
+  const index = favorites.value.findIndex(
+    fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
+  )
+  if (index === -1) {
+    favorites.value.push(forecast)
+  } else {
+    favorites.value.splice(index, 1)
+  }
+  saveFavorites()
+}
+
+function isFavorite(forecast) {
+  return favorites.value.some(
+    fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
+  )
+}
+
 onMounted(() => {
   fetchWeather()
+  loadFavorites()
 })
 </script>
 
@@ -213,6 +256,42 @@ table {
 
   span {
     margin: 0 10px;
+  }
+}
+
+button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #4caf50;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #45a049;
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  &.add-favorite {
+    background-color: #2196f3;
+
+    &:hover {
+      background-color: #1976d2;
+    }
+  }
+
+  &.remove-favorite {
+    background-color: #e65100;
+
+    &:hover {
+      background-color: #bf360c;
+    }
   }
 }
 </style>
