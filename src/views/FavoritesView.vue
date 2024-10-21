@@ -1,7 +1,7 @@
 <template>
   <div class="favorites">
     <h1>我的最愛列表</h1>
-    <div v-if="favorites.length === 0">您還沒有添加任何最愛項目。</div>
+    <div v-if="favorites.length === 0">還沒有添加任何最愛項目。</div>
     <div v-else>
       <div class="weather-list">
         <table>
@@ -33,6 +33,9 @@
               <td>{{ forecast.maxTemp }}°C</td>
               <td>{{ forecast.comfort }}</td>
               <td>
+                <button @click="openEditDialog(forecast)" class="edit-favorite">
+                  編輯
+                </button>
                 <button
                   @click="removeFavorite(forecast)"
                   class="remove-favorite"
@@ -51,12 +54,20 @@
           下一頁
         </button>
       </div>
+
+      <!-- 編輯天氣預報對話框 -->
+      <EditDialog
+        v-model:show="showEditDialog"
+        :forecast="editingForecast"
+        @save="saveEdit"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import EditDialog from '@/components/EditDialog.vue'
 
 const favorites = ref([])
 const currentPage = ref(1)
@@ -110,7 +121,41 @@ function removeFavorite(forecast) {
   }
 }
 
+const showEditDialog = ref(false)
+const editingForecast = ref({})
+
+function openEditDialog(forecast) {
+  editingForecast.value = { ...forecast }
+  showEditDialog.value = true
+}
+
+function saveEdit(updatedForecast) {
+  const index = favorites.value.findIndex(
+    fav =>
+      fav.city === updatedForecast.city &&
+      fav.startTime === updatedForecast.startTime,
+  )
+  if (index !== -1) {
+    favorites.value[index] = updatedForecast
+    saveFavorites()
+  }
+  showEditDialog.value = false
+}
+
 onMounted(() => {
   loadFavorites()
 })
 </script>
+
+<style lang="scss" scoped>
+.edit-favorite {
+  background-color: $primary-color;
+  color: white;
+  border-radius: $border-radius;
+  margin-right: 10px;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
+</style>

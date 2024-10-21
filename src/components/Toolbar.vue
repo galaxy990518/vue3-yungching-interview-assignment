@@ -22,12 +22,12 @@
     font-weight: 500;
 
     &:hover {
-      color: #4caf50;
+      color: $primary-color;
     }
 
     &.router-link-active {
-      color: #4caf50;
-      border-bottom: 2px solid #4caf50;
+      color: $primary-color;
+      border-bottom: 2px solid $primary-color;
     }
   }
 }
