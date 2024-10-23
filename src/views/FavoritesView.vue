@@ -3,102 +3,35 @@
     <h1>我的最愛列表</h1>
     <div v-if="favorites.length === 0">還沒有添加任何最愛項目。</div>
     <div v-else>
-      <div class="weather-list">
-        <table>
-          <thead>
-            <tr>
-              <th>縣市</th>
-              <th>預報時間</th>
-              <th>天氣狀況</th>
-              <th>降雨機率</th>
-              <th>最低溫</th>
-              <th>最高溫</th>
-              <th>舒適度</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="forecast in paginatedFavorites"
-              :key="forecast.startTime + forecast.city"
-            >
-              <td>{{ forecast.city }}</td>
-              <td>
-                {{ formatDate(forecast.startTime) }} -
-                {{ formatDate(forecast.endTime) }}
-              </td>
-              <td>{{ forecast.weather }}</td>
-              <td>{{ forecast.pop }}%</td>
-              <td>{{ forecast.minTemp }}°C</td>
-              <td>{{ forecast.maxTemp }}°C</td>
-              <td>{{ forecast.comfort }}</td>
-              <td>
-                <button @click="openEditDialog(forecast)" class="edit-favorite">
-                  編輯
-                </button>
-                <button
-                  @click="removeFavorite(forecast)"
-                  class="remove-favorite"
-                >
-                  移除最愛
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-        <span>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">
-          下一頁
-        </button>
-      </div>
-
-      <!-- 編輯天氣預報對話框 -->
-      <EditDialog
-        v-model:show="showEditDialog"
-        :forecast="editingForecast"
-        @save="saveEdit"
-      />
+      <WeatherTable :forecasts="favorites" :itemsPerPage="10">
+        <template #actions="{ forecast }">
+          <button @click="openEditDialog(forecast)" class="edit-favorite">
+            <span class="button-text">編輯</span>
+            <i class="icon fas fa-edit"></i>
+          </button>
+          <button @click="removeFavorite(forecast)" class="remove-favorite">
+            <span class="button-text">移除最愛</span>
+            <i class="icon fas fa-trash-alt"></i>
+          </button>
+        </template>
+      </WeatherTable>
     </div>
+    <EditDialog
+      v-model:show="showEditDialog"
+      :forecast="editingForecast"
+      @save="saveEdit"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import EditDialog from '@/components/EditDialog.vue'
+import WeatherTable from '@/components/WeatherTable.vue'
 
 const favorites = ref([])
-const currentPage = ref(1)
-const itemsPerPage = 10
-
-const paginatedFavorites = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return favorites.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(favorites.value.length / itemsPerPage)
-})
-
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-TW')
-}
+const showEditDialog = ref(false)
+const editingForecast = ref({})
 
 function loadFavorites() {
   const storedFavorites = localStorage.getItem('weatherFavorites')
@@ -120,9 +53,6 @@ function removeFavorite(forecast) {
     saveFavorites()
   }
 }
-
-const showEditDialog = ref(false)
-const editingForecast = ref({})
 
 function openEditDialog(forecast) {
   editingForecast.value = { ...forecast }
@@ -146,16 +76,3 @@ onMounted(() => {
   loadFavorites()
 })
 </script>
-
-<style lang="scss" scoped>
-.edit-favorite {
-  background-color: $primary-color;
-  color: white;
-  border-radius: $border-radius;
-  margin-right: 10px;
-
-  &:hover {
-    background-color: darken($primary-color, 10%);
-  }
-}
-</style>

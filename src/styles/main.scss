@@ -1,52 +1,15 @@
+@use 'sass:color';
+
 // 顏色變量
 $primary-color: #4caf50;
+$secondary-color: #2196f3;
 $danger-color: #f44336;
+$disabled-color: #cccccc;
+
 $border-radius: 4px;
 
-// 表格樣式
-.weather-list {
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f2f2f2;
-    }
-  }
-}
-
-// 分頁樣式
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  button {
-    margin: 0 10px;
-    padding: 5px 10px;
-    background-color: $primary-color;
-    color: white;
-    border: none;
-    cursor: pointer;
-
-    &:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-  }
-
-  span {
-    margin: 0 10px;
-  }
-}
+// 斷點變量
+$mobile-breakpoint: 768px;
 
 // 按鈕樣式
 button {
@@ -60,27 +23,38 @@ button {
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: darken($primary-color, 10%);
+    background-color: color.adjust($primary-color, $lightness: -10%);
   }
 
   &:disabled {
-    background-color: #cccccc;
+    background-color: $disabled-color;
     cursor: not-allowed;
   }
 
   &.add-favorite {
-    background-color: #2196f3;
+    background-color: $secondary-color;
 
     &:hover {
-      background-color: #1976d2;
+      background-color: color.adjust($secondary-color, $lightness: -10%);
     }
   }
 
   &.remove-favorite {
-    background-color: #e65100;
+    background-color: color.adjust($danger-color, $lightness: -10%);
 
     &:hover {
-      background-color: #bf360c;
+      background-color: color.adjust($danger-color, $lightness: -10%);
+    }
+  }
+
+  &.edit-favorite {
+    background-color: $primary-color;
+    color: white;
+    border-radius: $border-radius;
+    margin-right: 10px;
+
+    &:hover {
+      background-color: color.adjust($primary-color, $lightness: -10%);
     }
   }
 
@@ -95,16 +69,15 @@ button {
     background-color: $primary-color;
 
     &:hover {
-      background-color: darken($primary-color, 10%);
+      background-color: color.adjust($primary-color, $lightness: -10%);
     }
 
     &:disabled {
-      background-color: #ccc;
-      color: #666;
+      background-color: $disabled-color;
       cursor: not-allowed;
 
       &:hover {
-        background-color: #ccc;
+        background-color: $disabled-color;
       }
     }
   }
@@ -113,7 +86,45 @@ button {
     background-color: $danger-color;
 
     &:hover {
-      background-color: darken($danger-color, 10%);
+      background-color: color.adjust($danger-color, $lightness: -10%);
     }
+  }
+
+  @media (max-width: $mobile-breakpoint) {
+    padding: 8px;
+    font-size: 12px;
+
+    &.add-favorite,
+    &.remove-favorite,
+    &.edit-favorite {
+      .button-text {
+        display: none;
+      }
+      .icon {
+        display: inline-block;
+      }
+    }
+  }
+
+  .icon {
+    display: none;
+  }
+
+  @media (min-width: $mobile-breakpoint) {
+    .icon {
+      display: none;
+    }
+    .button-text {
+      display: inline-block;
+    }
+  }
+}
+
+.home,
+.favorites {
+  padding: 20px;
+
+  @media (max-width: $mobile-breakpoint) {
+    padding: 10px;
   }
 }

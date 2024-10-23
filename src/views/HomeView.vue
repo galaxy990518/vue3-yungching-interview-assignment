@@ -13,62 +13,31 @@
     <div v-if="isLoading">加載中...</div>
     <div v-else-if="error">錯誤：{{ error }}</div>
     <div v-else>
-      <div class="weather-list">
-        <table>
-          <thead>
-            <tr>
-              <th>縣市</th>
-              <th>預報時間</th>
-              <th>天氣狀況</th>
-              <th>降雨機率</th>
-              <th>最低溫</th>
-              <th>最高溫</th>
-              <th>舒適度</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="forecast in paginatedForecasts"
-              :key="forecast.startTime + forecast.city"
-            >
-              <td>{{ forecast.city }}</td>
-              <td>
-                {{ formatDate(forecast.startTime) }} -
-                {{ formatDate(forecast.endTime) }}
-              </td>
-              <td>{{ forecast.weather }}</td>
-              <td>{{ forecast.pop }}%</td>
-              <td>{{ forecast.minTemp }}°C</td>
-              <td>{{ forecast.maxTemp }}°C</td>
-              <td>{{ forecast.comfort }}</td>
-              <td>
-                <button
-                  @click="toggleFavorite(forecast)"
-                  :class="
-                    isFavorite(forecast) ? 'remove-favorite' : 'add-favorite'
-                  "
-                >
-                  {{ isFavorite(forecast) ? '移除最愛' : '新增最愛' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <button @click="prevPage" :disabled="currentPage === 1">上一頁</button>
-        <span>第 {{ currentPage }} 頁，共 {{ totalPages }} 頁</span>
-        <button @click="nextPage" :disabled="currentPage === totalPages">
-          下一頁
-        </button>
-      </div>
+      <WeatherTable :forecasts="weatherForecasts" :itemsPerPage="10">
+        <template #actions="{ forecast }">
+          <button
+            @click="toggleFavorite(forecast)"
+            :class="isFavorite(forecast) ? 'remove-favorite' : 'add-favorite'"
+          >
+            <span class="button-text">
+              {{ isFavorite(forecast) ? '移除最愛' : '新增最愛' }}
+            </span>
+            <i
+              class="icon"
+              :class="
+                isFavorite(forecast) ? 'fas fa-heart-broken' : 'fas fa-heart'
+              "
+            ></i>
+          </button>
+        </template>
+      </WeatherTable>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import WeatherTable from '@/components/WeatherTable.vue'
 
 const weatherForecasts = ref([])
 const isLoading = ref(false)
@@ -99,31 +68,6 @@ const cities = [
   '金門縣',
   '連江縣',
 ]
-
-const currentPage = ref(1)
-const itemsPerPage = 10
-
-const paginatedForecasts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return weatherForecasts.value.slice(start, end)
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(weatherForecasts.value.length / itemsPerPage)
-})
-
-function prevPage() {
-  if (currentPage.value > 1) {
-    currentPage.value--
-  }
-}
-
-function nextPage() {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++
-  }
-}
 
 const favorites = ref([])
 
@@ -165,7 +109,6 @@ async function fetchWeather() {
       weatherForecasts.value = forecasts.sort((a, b) => {
         return cities.indexOf(a.city) - cities.indexOf(b.city)
       })
-      currentPage.value = 1 // 重置 currentPage 到第一頁
     } else {
       throw new Error(data.message || '獲取天氣數據失敗')
     }
@@ -175,11 +118,6 @@ async function fetchWeather() {
   } finally {
     isLoading.value = false
   }
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString)
-  return date.toLocaleString('zh-TW')
 }
 
 function loadFavorites() {
@@ -216,3 +154,10 @@ onMounted(() => {
   loadFavorites()
 })
 </script>
+
+<style lang="scss" scoped>
+#city-select {
+  max-width: 100%;
+  margin-bottom: 10px;
+}
+</style>
