@@ -30,7 +30,9 @@
             <td>{{ forecast.maxTemp }}°C</td>
             <td>{{ forecast.comfort }}</td>
             <td>
-              <slot name="actions" :forecast="forecast"></slot>
+              <span class="list-actions">
+                <slot name="actions" :forecast="forecast"></slot>
+              </span>
             </td>
           </tr>
         </tbody>
@@ -151,6 +153,19 @@ function formatDate(dateString, isMobile = false) {
 
     th {
       background-color: #f2f2f2;
+      white-space: nowrap;
+    }
+
+    .list-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+
+      :deep(button) {
+        flex: 1 0 auto;
+        padding: 5px 10px;
+        white-space: nowrap;
+      }
     }
   }
 }
@@ -177,8 +192,8 @@ function formatDate(dateString, isMobile = false) {
 
     .card-actions {
       display: flex;
+      gap: 5px;
       justify-content: flex-end;
-      margin-top: 10px;
     }
   }
 }
@@ -191,16 +206,6 @@ function formatDate(dateString, isMobile = false) {
 
   button {
     margin: 0 10px;
-    padding: 5px 10px;
-    background-color: $primary-color;
-    color: white;
-    border: none;
-    cursor: pointer;
-
-    &:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
   }
 
   span {

@@ -51,7 +51,6 @@ button {
     background-color: $primary-color;
     color: white;
     border-radius: $border-radius;
-    margin-right: 10px;
 
     &:hover {
       background-color: color.adjust($primary-color, $lightness: -10%);
