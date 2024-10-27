@@ -3,18 +3,27 @@
     <h1>我的最愛列表</h1>
     <div v-if="favorites.length === 0">還沒有添加任何最愛項目。</div>
     <div v-else>
-      <WeatherTable :forecasts="favorites" :itemsPerPage="10">
+      <WeatherTable
+        :forecasts="favorites"
+        :itemsPerPage="10"
+        @selection-change="handleSelectionChange"
+      >
         <template #actions="{ forecast }">
           <button @click="openEditDialog(forecast)" class="edit-favorite">
             <span class="button-text">編輯</span>
             <i class="icon fas fa-edit"></i>
           </button>
-          <button @click="removeFavorite(forecast)" class="remove-favorite">
-            <span class="button-text">移除最愛</span>
-            <i class="icon fas fa-trash-alt"></i>
-          </button>
         </template>
       </WeatherTable>
+
+      <button
+        v-show="selectedForecasts.length > 0"
+        @click="batchRemoveFavorites"
+        class="floating-button remove-favorite"
+      >
+        <i class="fas fa-trash"></i>
+        <span>移除已選項目 ({{ selectedForecasts.length }})</span>
+      </button>
     </div>
     <EditDialog
       v-model:show="showEditDialog"
@@ -32,6 +41,7 @@ import WeatherTable from '@/components/WeatherTable.vue'
 const favorites = ref([])
 const showEditDialog = ref(false)
 const editingForecast = ref({})
+const selectedForecasts = ref([])
 
 function loadFavorites() {
   const storedFavorites = localStorage.getItem('weatherFavorites')
@@ -44,14 +54,21 @@ function saveFavorites() {
   localStorage.setItem('weatherFavorites', JSON.stringify(favorites.value))
 }
 
-function removeFavorite(forecast) {
-  const index = favorites.value.findIndex(
-    fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
-  )
-  if (index !== -1) {
-    favorites.value.splice(index, 1)
-    saveFavorites()
-  }
+function handleSelectionChange(selected) {
+  selectedForecasts.value = selected
+}
+
+function batchRemoveFavorites() {
+  selectedForecasts.value.forEach(forecast => {
+    const index = favorites.value.findIndex(
+      fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
+    )
+    if (index !== -1) {
+      favorites.value.splice(index, 1)
+    }
+  })
+  saveFavorites()
+  selectedForecasts.value = []
 }
 
 function openEditDialog(forecast) {

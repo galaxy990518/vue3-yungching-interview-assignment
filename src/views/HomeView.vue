@@ -16,32 +16,34 @@
     <div v-if="isLoading">加載中...</div>
     <div v-else-if="error">錯誤：{{ error }}</div>
     <div v-else>
-      <WeatherTable :forecasts="weatherForecasts" :itemsPerPage="10">
-        <template #actions="{ forecast }">
-          <button
-            @click="toggleFavorite(forecast)"
-            :class="isFavorite(forecast) ? 'remove-favorite' : 'add-favorite'"
-          >
-            <span class="button-text">
-              {{ isFavorite(forecast) ? '移除最愛' : '新增最愛' }}
-            </span>
-            <i
-              class="icon"
-              :class="
-                isFavorite(forecast) ? 'fas fa-heart-broken' : 'fas fa-heart'
-              "
-            ></i>
-          </button>
-        </template>
-      </WeatherTable>
+      <WeatherTable
+        ref="weatherTable"
+        :forecasts="weatherForecasts"
+        :itemsPerPage="10"
+        @selection-change="handleSelectionChange"
+      />
+
+      <button
+        v-show="selectedForecasts.length > 0"
+        @click="batchToggleFavorite"
+        class="floating-button"
+        :class="shouldAddToFavorites ? 'add-favorite' : 'remove-favorite'"
+      >
+        <i :class="shouldAddToFavorites ? 'fas fa-heart' : 'fas fa-trash'"></i>
+        <span>
+          {{ shouldAddToFavorites ? '加入最愛' : '移除最愛' }}
+          ({{ selectedForecasts.length }})
+        </span>
+      </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import WeatherTable from '@/components/WeatherTable.vue'
 
+const weatherTable = ref(null)
 const weatherForecasts = ref([])
 const isLoading = ref(false)
 const error = ref(null)
@@ -73,6 +75,11 @@ const cities = [
 ]
 
 const favorites = ref([])
+const selectedForecasts = ref([])
+
+const shouldAddToFavorites = computed(() => {
+  return selectedForecasts.value.some(forecast => !isFavorite(forecast))
+})
 
 async function fetchWeather() {
   isLoading.value = true
@@ -134,22 +141,35 @@ function saveFavorites() {
   localStorage.setItem('weatherFavorites', JSON.stringify(favorites.value))
 }
 
-function toggleFavorite(forecast) {
-  const index = favorites.value.findIndex(
-    fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
-  )
-  if (index === -1) {
-    favorites.value.push(forecast)
-  } else {
-    favorites.value.splice(index, 1)
-  }
-  saveFavorites()
-}
-
 function isFavorite(forecast) {
   return favorites.value.some(
     fav => fav.city === forecast.city && fav.startTime === forecast.startTime,
   )
+}
+
+function handleSelectionChange(selected) {
+  selectedForecasts.value = selected
+}
+
+function batchToggleFavorite() {
+  if (shouldAddToFavorites.value) {
+    const newFavorites = selectedForecasts.value.filter(
+      forecast => !isFavorite(forecast),
+    )
+    favorites.value.push(...newFavorites)
+  } else {
+    favorites.value = favorites.value.filter(
+      fav =>
+        !selectedForecasts.value.some(
+          selected =>
+            selected.city === fav.city && selected.startTime === fav.startTime,
+        ),
+    )
+  }
+
+  saveFavorites()
+  selectedForecasts.value = []
+  weatherTable.value.resetSelection()
 }
 
 onMounted(() => {

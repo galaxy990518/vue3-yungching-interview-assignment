@@ -1,9 +1,27 @@
 <template>
   <div>
+    <div class="mobile-select-all">
+      <label class="select-all-label">
+        <input
+          type="checkbox"
+          :checked="allSelected"
+          @change="toggleAllSelection"
+        />
+        全選
+      </label>
+    </div>
+
     <div class="weather-list">
       <table>
         <thead>
           <tr>
+            <th>
+              <input
+                type="checkbox"
+                :checked="allSelected"
+                @change="toggleAllSelection"
+              />
+            </th>
             <th>縣市</th>
             <th>預報時間</th>
             <th>天氣狀況</th>
@@ -11,7 +29,7 @@
             <th>最低溫</th>
             <th>最高溫</th>
             <th>舒適度</th>
-            <th>操作</th>
+            <th v-if="$slots.actions">操作</th>
           </tr>
         </thead>
         <tbody>
@@ -19,6 +37,14 @@
             v-for="forecast in paginatedForecasts"
             :key="forecast.startTime + forecast.city"
           >
+            <td>
+              <input
+                type="checkbox"
+                v-model="selectedItems"
+                :value="forecast"
+                @change="$emit('selection-change', selectedItems)"
+              />
+            </td>
             <td>{{ forecast.city }}</td>
             <td>
               {{ formatDate(forecast.startTime) }} -
@@ -29,7 +55,7 @@
             <td>{{ forecast.minTemp }}°C</td>
             <td>{{ forecast.maxTemp }}°C</td>
             <td>{{ forecast.comfort }}</td>
-            <td>
+            <td v-if="$slots.actions">
               <span class="list-actions">
                 <slot name="actions" :forecast="forecast"></slot>
               </span>
@@ -44,6 +70,14 @@
         :key="forecast.startTime + forecast.city"
         class="weather-card"
       >
+        <div class="card-checkbox">
+          <input
+            type="checkbox"
+            v-model="selectedItems"
+            :value="forecast"
+            @change="$emit('selection-change', selectedItems)"
+          />
+        </div>
         <div class="card-row">縣市：{{ forecast.city }}</div>
         <div class="card-row">
           預報時間：{{ formatDate(forecast.startTime, true) }} -
@@ -55,7 +89,7 @@
           溫度：{{ forecast.minTemp }}°C - {{ forecast.maxTemp }}°C
         </div>
         <div class="card-row">舒適度：{{ forecast.comfort }}</div>
-        <div class="card-actions">
+        <div v-if="$slots.actions" class="card-actions">
           <slot name="actions" :forecast="forecast"></slot>
         </div>
       </div>
@@ -130,6 +164,37 @@ function formatDate(dateString, isMobile = false) {
     .replace(/\//g, '/')
     .replace(',', '')
 }
+
+const selectedItems = ref([])
+
+const allSelected = computed(() => {
+  return (
+    paginatedForecasts.value.length > 0 &&
+    paginatedForecasts.value.every(forecast =>
+      selectedItems.value.some(
+        item =>
+          item.city === forecast.city && item.startTime === forecast.startTime,
+      ),
+    )
+  )
+})
+
+function toggleAllSelection(event) {
+  if (event.target.checked) {
+    selectedItems.value = [...paginatedForecasts.value]
+  } else {
+    selectedItems.value = []
+  }
+  emit('selection-change', selectedItems.value)
+}
+
+const emit = defineEmits(['selection-change'])
+
+defineExpose({
+  resetSelection() {
+    selectedItems.value = []
+  },
+})
 </script>
 
 <style scoped lang="scss">
@@ -210,6 +275,44 @@ function formatDate(dateString, isMobile = false) {
 
   span {
     margin: 0 10px;
+  }
+}
+
+.card-checkbox {
+  margin-bottom: 10px;
+}
+
+input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+// 新增手機版全選區域的樣式
+.mobile-select-all {
+  display: none; // 預設隱藏
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+
+  @media (max-width: $mobile-breakpoint) {
+    display: block; // 只在手機版顯示
+  }
+
+  .select-all-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      width: 18px;
+      height: 18px;
+    }
   }
 }
 </style>
