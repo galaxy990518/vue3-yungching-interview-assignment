@@ -1,15 +1,18 @@
 <template>
   <div class="home">
     <h1>天氣預報</h1>
-    <div>
+    <div class="select-wrapper">
       <label for="city-select">選擇縣市：</label>
-      <select id="city-select" v-model="selectedCity" @change="fetchWeather">
-        <option value="">全部</option>
-        <option v-for="city in cities" :key="city" :value="city">
-          {{ city }}
-        </option>
-      </select>
+      <div class="select-container">
+        <select id="city-select" v-model="selectedCity" @change="fetchWeather">
+          <option value="">全部</option>
+          <option v-for="city in cities" :key="city" :value="city">
+            {{ city }}
+          </option>
+        </select>
+      </div>
     </div>
+
     <div v-if="isLoading">加載中...</div>
     <div v-else-if="error">錯誤：{{ error }}</div>
     <div v-else>
@@ -156,8 +159,62 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-#city-select {
-  max-width: 100%;
+.select-wrapper {
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  label {
+    white-space: nowrap;
+    font-size: 16px;
+    color: #333;
+  }
+
+  .select-container {
+    width: 100%;
+    max-width: 300px;
+
+    #city-select {
+      width: 100%;
+      padding: 10px 15px;
+      font-size: 16px;
+      color: #333;
+      background-color: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+
+      // 移除預設樣式
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+
+      // 自定義下拉箭頭的位置
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4L6 8L10 4' stroke='%23666' stroke-width='2' fill='none'/%3E%3C/svg%3E")
+        no-repeat;
+      background-position: right 10px center;
+      background-color: white;
+      padding-right: 30px;
+
+      &:hover {
+        border-color: #4a90e2;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #4a90e2;
+        box-shadow: 0 0 5px rgba(74, 144, 226, 0.3);
+      }
+
+      option {
+        padding: 10px;
+
+        &:checked {
+          background-color: #f5f5f5;
+        }
+      }
+    }
+  }
 }
 </style>
